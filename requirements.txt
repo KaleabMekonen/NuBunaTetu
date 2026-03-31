@@ -1,0 +1,36 @@
+# NuBunaTetu – Python Dependencies
+# Install with: pip install -r requirements.txt
+# (On Mac/Linux: pip3 install -r requirements.txt)
+
+# AI / Script generation
+anthropic>=0.25.0
+
+# AI / Illustrated image generation (DALL-E 3)
+openai>=1.30.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# HTTP requests & scraping
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=5.1.0
+
+# Google Trends
+pytrends>=4.9.2
+
+# Text-to-speech (Amharic support via edge-tts)
+edge-tts>=6.1.9
+
+# Video creation
+moviepy>=2.0.0
+Pillow>=10.2.0
+numpy>=1.26.0
+
+# Telegram bot
+python-telegram-bot>=21.0
+
+# Note: ffmpeg must also be installed on your system.
+# Mac:     brew install ffmpeg
+# Ubuntu:  sudo apt install ffmpeg
+# Windows: https://ffmpeg.org/download.html
