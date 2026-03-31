@@ -9,10 +9,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── API Keys ───────────────────────────────────────────────────────────────────
-ANTHROPIC_API_KEY  = os.getenv("ANTHROPIC_API_KEY", "")   # Required — script writing
-OPENAI_API_KEY     = os.getenv("OPENAI_API_KEY", "")      # Required — illustrated image generation
+GEMINI_API_KEY     = os.getenv("GEMINI_API_KEY", "")      # Required — script writing (FREE at aistudio.google.com)
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")  # Optional — Telegram delivery
 TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "")    # Optional — Telegram delivery
+# Images: Pollinations.ai — completely free, no key needed!
 
 # TikTok API (not needed yet — posting is done manually for now)
 # TIKTOK_CLIENT_KEY    = os.getenv("TIKTOK_CLIENT_KEY", "")

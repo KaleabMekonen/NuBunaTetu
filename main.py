@@ -113,8 +113,8 @@ def run_pipeline(custom_topic: str = None) -> None:
 
 def check_env() -> bool:
     """Validates that required environment variables are set."""
-    if not config.ANTHROPIC_API_KEY:
-        logger.error("❌ ANTHROPIC_API_KEY is required. Add it to your .env file.")
+    if not config.GEMINI_API_KEY:
+        logger.error("❌ GEMINI_API_KEY is required. Get your free key at aistudio.google.com")
         return False
 
     if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:

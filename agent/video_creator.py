@@ -22,7 +22,7 @@ import math
 from pathlib import Path
 from io import BytesIO
 
-import openai
+import urllib.parse
 import edge_tts
 from moviepy import (
     AudioFileClip, ImageClip, CompositeVideoClip,
@@ -45,78 +45,75 @@ AMHARIC_VOICE  = "am-ET-MekdesNeural"
 FALLBACK_VOICE = "en-US-AriaNeural"
 
 
-# ── DALL-E 3 Illustrated Image Generation ─────────────────────────────────────
+# ── Pollinations.ai Illustrated Image Generation (FREE) ───────────────────────
+# Pollinations.ai is a completely free public AI image API.
+# No account, no API key, no credit card needed — just a URL.
+# It uses Stable Diffusion under the hood.
+# Docs: https://pollinations.ai
 
-# Prompt template that steers DALL-E toward Ethiopian illustrated art style
+# Style that steers Pollinations toward Ethiopian illustrated art
 IMAGE_STYLE = (
     "digital illustration, vibrant Ethiopian art style, "
     "warm earthy tones with pops of red green and gold, "
     "Habesha cultural motifs and traditional patterns, "
-    "detailed and expressive characters, no text, no words, "
-    "9:16 portrait orientation, cinematic composition"
+    "detailed expressive characters, no text, no words, "
+    "portrait orientation, cinematic composition, high quality"
 )
 
-# Scene prompts matched to each part of the video
 SCENE_PROMPTS = {
     "hook": (
-        "an illustrated Ethiopian scene that grabs attention — "
-        "an expressive young Habesha person reacting with surprise or laughter, "
-        "vibrant Addis Abeba background, "
+        "expressive young Habesha person reacting with joy or surprise, "
+        "vibrant Addis Abeba background, Ethiopian illustration, "
     ),
     "body": (
-        "an illustrated Ethiopian story scene — "
-        "lively community, cultural setting, coffee ceremony, music, or sports, "
-        "warm and joyful atmosphere, "
+        "lively Ethiopian community scene, cultural celebration, "
+        "coffee ceremony or music or football, warm atmosphere, Ethiopian art, "
     ),
     "cta": (
-        "a beautiful illustrated Ethiopian closing scene — "
-        "traditional coffee ceremony, Ethiopian flag colors, "
-        "warm invitation feeling, "
+        "beautiful Ethiopian coffee ceremony scene, "
+        "traditional patterns, Ethiopian flag colors, warm inviting mood, illustration, "
     ),
 }
 
 
-def _build_dalle_prompt(scene: str, topic: str, category: str) -> str:
-    """Builds a DALL-E 3 prompt for a specific scene and topic."""
-    base = SCENE_PROMPTS.get(scene, SCENE_PROMPTS["body"])
-    topic_hint = f"themed around '{topic}', "
-    return base + topic_hint + IMAGE_STYLE
+def _build_pollinations_url(scene: str, topic: str) -> str:
+    """
+    Builds a Pollinations.ai URL for image generation.
+
+    How it works:
+    Pollinations.ai accepts a text prompt in the URL and returns
+    a generated image directly — like a magic link that creates art.
+    We URL-encode the prompt (spaces become %20, etc.) and set
+    the width/height to our TikTok portrait dimensions.
+    """
+    base_prompt = SCENE_PROMPTS.get(scene, SCENE_PROMPTS["body"])
+    full_prompt  = f"{base_prompt}themed around '{topic}', {IMAGE_STYLE}"
+    encoded      = urllib.parse.quote(full_prompt)
+    # nologo=true removes the Pollinations watermark
+    return f"https://image.pollinations.ai/prompt/{encoded}?width={W}&height={H}&nologo=true&seed={hash(topic + scene) % 99999}"
 
 
 def generate_illustrated_scene(scene: str, topic: str, category: str, output_path: str) -> str:
     """
-    Calls DALL-E 3 to generate one illustrated scene.
-    Saves to output_path and returns the path.
-    Falls back to a stylised solid colour if generation fails.
+    Calls Pollinations.ai to generate one illustrated Ethiopian scene.
+    Completely free — no API key required.
+    Falls back to a warm gradient if the request fails.
     """
-    if not config.OPENAI_API_KEY:
-        logger.warning("No OPENAI_API_KEY — using fallback gradient background.")
-        return _make_gradient_bg(output_path)
-
-    prompt = _build_dalle_prompt(scene, topic, category)
-    logger.info(f"   🎨 Generating '{scene}' illustration via DALL-E 3...")
+    logger.info(f"   🎨 Generating '{scene}' illustration via Pollinations.ai (free)...")
 
     try:
-        client = openai.OpenAI(api_key=config.OPENAI_API_KEY)
-        response = client.images.generate(
-            model="dall-e-3",
-            prompt=prompt,
-            size="1024x1792",     # Closest to 9:16 that DALL-E 3 supports
-            quality="standard",
-            n=1,
-        )
-        image_url = response.data[0].url
-        img_data  = requests.get(image_url, timeout=30).content
+        url      = _build_pollinations_url(scene, topic)
+        response = requests.get(url, timeout=60)   # generation takes ~10–20s
+        response.raise_for_status()
 
-        # Resize to exact 1080×1920
-        img = Image.open(BytesIO(img_data)).convert("RGB")
+        img = Image.open(BytesIO(response.content)).convert("RGB")
         img = img.resize((W, H), Image.LANCZOS)
         img.save(output_path, "JPEG", quality=92)
         logger.info(f"   ✅ Illustration saved: {output_path}")
         return output_path
 
     except Exception as e:
-        logger.warning(f"   DALL-E generation failed for '{scene}': {e}")
+        logger.warning(f"   Pollinations failed for '{scene}': {e} — using gradient fallback.")
         return _make_gradient_bg(output_path)
 
 

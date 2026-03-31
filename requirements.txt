@@ -2,11 +2,9 @@
 # Install with: pip install -r requirements.txt
 # (On Mac/Linux: pip3 install -r requirements.txt)
 
-# AI / Script generation
-anthropic>=0.25.0
-
-# AI / Illustrated image generation (DALL-E 3)
-openai>=1.30.0
+# AI / Script generation (FREE — Google Gemini)
+google-generativeai>=0.7.0
+# Images are generated FREE via Pollinations.ai — no library needed, just requests!
 
 # Environment variables
 python-dotenv>=1.0.0

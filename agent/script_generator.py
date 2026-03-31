@@ -6,8 +6,9 @@ Uses Claude AI to write punchy Amharic/English mixed TikTok scripts
 based on a trending topic.
 """
 
+import json
 import logging
-import anthropic
+import google.generativeai as genai
 from dataclasses import dataclass
 
 import sys, os
@@ -63,12 +64,21 @@ Output strictly as JSON with these keys:
 
 def generate_script(topic: TrendingTopic) -> VideoScript:
     """
-    Calls Claude to generate a TikTok script for the given trending topic.
+    Calls Google Gemini (free tier) to generate a TikTok script.
     Returns a VideoScript dataclass.
+
+    Why Gemini?
+    Google's Gemini 1.5 Flash is free up to 1,500 requests/day —
+    more than enough for one video a day with room to spare.
+    Get your free API key at: aistudio.google.com
     """
     logger.info(f"✍️  Generating script for: {topic.title}")
 
-    client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
+    genai.configure(api_key=config.GEMINI_API_KEY)
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        system_instruction=SYSTEM_PROMPT
+    )
 
     user_prompt = f"""Write a fun, entertaining TikTok video script about this topic:
 
@@ -83,18 +93,13 @@ Remember:
 - Body should be 30–40 seconds when spoken at a natural pace
 - End with a fun CTA in Amharic/English mix
 - Include 6–10 hashtags (entertainment-focused, mix Amharic and English themes)
-- Caption should be punchy and fun — something people want to share"""
+- Caption should be punchy and fun — something people want to share
+
+Output ONLY valid JSON — no markdown, no explanation, just the JSON object."""
 
     try:
-        message = client.messages.create(
-            model="claude-opus-4-6",
-            max_tokens=1024,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_prompt}]
-        )
-
-        import json
-        raw = message.content[0].text.strip()
+        response = model.generate_content(user_prompt)
+        raw = response.text.strip()
 
         # Strip markdown code fences if present
         if raw.startswith("```"):
